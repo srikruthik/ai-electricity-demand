@@ -1,0 +1,7 @@
+jurisdiction,year,kind,central_twh,low_twh,high_twh,source
+United States,2023,estimate,176.0,,,LBNL (2024)
+United States,2030,projection,649.0,521.0,843.0,LBNL (2026)
+World,2024,estimate,415.0,,,IEA (2025)
+World,2025,estimate,485.0,,,IEA (2026)
+World,2030,projection,950.0,,,IEA (2026)
+World,2035,projection,1200.0,700.0,1700.0,IEA (2025)
