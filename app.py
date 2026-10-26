@@ -5,6 +5,7 @@ from pathlib import Path
 import altair as alt
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 from src import charts_ai, charts_global, charts_ireland
 
@@ -120,61 +121,11 @@ tab1, tab2, tab3 = st.tabs(["1. Ireland: what meters show", "2. Is Ireland an ou
                             "3. Is it AI specifically?"])
 
 with tab1:
-    st.write(
-        "Ireland is one of the few countries that measures data centre electricity directly from meters, "
-        "which makes it the clearest test case available."
+    components.html(
+        charts_ireland.ireland_panel(ireland),
+        height=2400,
+        scrolling=False,
     )
-    start_year, end_year = st.slider(
-        "Years to compare", min_value=first_year, max_value=last_year,
-        value=(first_year, last_year), step=1, key="year_range",
-    )
-    window = ireland.loc[ireland["year"].between(start_year, end_year)]
-
-    if start_year == end_year:
-        st.info("Choose two different years on the slider to compare change over time.")
-    else:
-        measure = st.radio("Show consumption as", ["Gigawatt hours", f"Index ({start_year} = 100)"],
-                           horizontal=True, key="trend_measure")
-        show(charts_ireland.ireland_trend(window, indexed=measure != "Gigawatt hours"))
-        st.caption(
-            f"Annual metered electricity consumption in Ireland, {start_year}-{end_year}, in gigawatt hours "
-            f"(GWh). The index sets each customer type's {start_year} value to 100, so growth rates can be "
-            "compared despite very different sizes."
-        )
-
-        show(charts_ireland.ireland_share(window))
-        st.caption(
-            f"Each bar is one year's total metered electricity consumption, {start_year}-{end_year}, split "
-            "between data centres and every other metered customer, in percent."
-        )
-
-        growth = growth_between(ireland, start_year, end_year)
-        dc_change, other_change = growth["change_gwh"].tolist()
-        show(charts_ireland.growth_split(growth, start_year, end_year))
-        net = dc_change + other_change
-        if net > 0 and other_change >= 0:
-            note = f"Data centres account for {dc_change / net * 100:.0f}% of the net increase of {net:,} GWh."
-        elif net > 0:
-            note = (f"Consumption by other customers fell, so data centres account for more than the whole "
-                    f"net increase of {net:,} GWh.")
-        else:
-            note = "Total metered consumption did not rise over this period, so a share of growth is not meaningful."
-        st.caption(f"Change in annual metered consumption between {start_year} and {end_year}, in GWh. {note}")
-
-        yoy_window = ireland.loc[ireland["year"].between(start_year + 1, end_year)]
-        show(charts_ireland.ireland_yoy(yoy_window))
-        st.caption(
-            f"Change in annual metered consumption from the previous year, {start_year + 1}-{end_year}, in GWh. "
-            "Bars above zero are increases; bars below are decreases."
-        )
-
-        st.download_button(
-            "Download these years as CSV",
-            data=window.to_csv(index=False).encode("utf-8"),
-            file_name=f"ireland_metered_{start_year}_{end_year}.csv",
-            mime="text/csv",
-            key="download_ireland",
-        )
 
 with tab2:
     lens = st.radio(
