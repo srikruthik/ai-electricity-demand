@@ -64,7 +64,7 @@ the CSO samples against each other (see *Validation*), which would catch most tr
 |---|---|
 | Sources | International Energy Agency, *Energy and AI* (April 2025) and *Key Questions on Energy and AI* (16 April 2026) with its press release; Lawrence Berkeley National Laboratory, *2024 United States Data Center Energy Usage Report* and *United States Data Center Energy Usage Report: 2025 Update* (June 2026); Congressional Research Service, *Data Centers and Their Energy Consumption: Frequently Asked Questions* (R48646), citing EPRI |
 | URLs | Per row, in the `url` column |
-| Licence | IEA: Creative Commons Attribution 4.0, stated on both report pages. LBNL: publicly released US Department of Energy laboratory reports; figures reused with citation. CRS: US Government work, public domain. |
+| Licence | IEA: Creative Commons Attribution 4.0. LBNL 2025 Update (published June 2026): Creative Commons Attribution 4.0, confirmed by the eScholarship publication record (https://escholarship.org/uc/item/33m6w3x0). LBNL 2024 report: licence not independently verified; figures attributed to the original report. CRS: US Government work, public domain. |
 | Primary key | `estimate_id` |
 | Time coverage | 2023-2035 (estimates for 2023-2025; projections for 2030-2035) |
 | Latest observation | 2025 for estimates; projections run to 2035 |

@@ -29,6 +29,13 @@ def comparison(frame: pd.DataFrame, lens: str, complete: bool = True) -> alt.Cha
         color=alt.Color("basis:N", title="How it was measured",
                         scale=alt.Scale(domain=present, range=[palette[b] for b in present]),
                         legend=alt.Legend(orient="bottom")),
+        tooltip=[
+            alt.Tooltip("jurisdiction:N", title="Place"),
+            alt.Tooltip("label:N", title="Published figure"),
+            alt.Tooltip("period:N", title="Reporting period"),
+            alt.Tooltip("basis:N", title="Measurement method"),
+            alt.Tooltip("source:N", title="Source"),
+        ],
     )
     labels = alt.Chart(data).mark_text(align="left", dx=5, fontSize=12).encode(
         y=alt.Y("jurisdiction:N", sort=order), x="share_pct:Q", text="text:N"
