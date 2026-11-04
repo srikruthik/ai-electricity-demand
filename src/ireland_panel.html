@@ -177,6 +177,28 @@ const from=document.getElementById('year-from');const to=document.getElementById
 for(const r of DATA){for(const el of [from,to]){const o=document.createElement('option');o.value=r.year;o.textContent=r.year;el.appendChild(o)}}
 from.value=DATA[0].year;to.value=DATA[DATA.length-1].year;
 const plotConfig={displayModeBar:false,responsive:true,scrollZoom:false,displaylogo:false};
+
+const readyPlots = new Set();
+const plotObserver = "IntersectionObserver" in window
+  ? new IntersectionObserver(entries => {
+      let changed = false;
+
+      for (const entry of entries) {
+        if (entry.isIntersecting && !readyPlots.has(entry.target.id)) {
+          readyPlots.add(entry.target.id);
+          changed = true;
+        }
+      }
+
+      if (changed) update();
+    }, { rootMargin: "350px 0px" })
+  : null;
+
+if (plotObserver) {
+  document.querySelectorAll(".plot").forEach(plot => plotObserver.observe(plot));
+} else {
+  document.querySelectorAll(".plot").forEach(plot => readyPlots.add(plot.id));
+}
 const frameLayout=(height,extra={})=>Object.assign({
  height,paper_bgcolor:'#fff',plot_bgcolor:'#fff',
  font:{family:'Inter,Segoe UI,Arial,sans-serif',color:C.text,size:11},
@@ -227,7 +249,7 @@ function update(){
   customdata:raw,hovertemplate:`<b>${name}</b><br>%{x}<br>%{customdata:,.0f} GWh<extra></extra>`});
  const lastLabel=(value,color,text,offset)=>({x:years.length-1,y:value,text,showarrow:false,xanchor:'right',yanchor:'bottom',xshift:-7,yshift:offset,font:{size:11,color},bgcolor:'rgba(255,255,255,.86)'});
  const lineHeight=246;
- Plotly.react('plot1',[
+ if(readyPlots.has('plot1')) Plotly.react('plot1',[
   line(y1,C.teal,'Data centres',win.map(r=>r.data_centres_gwh)),
   line(y2,C.slate,'All other customers',win.map(r=>r.other_gwh))],
   frameLayout(lineHeight,{margin:{l:54,r:13,t:16,b:36},
@@ -235,7 +257,7 @@ function update(){
    yaxis:{range:[0,max1*1.19],gridcolor:C.line,zeroline:false,fixedrange:true,nticks:5,tickformat:mode==='gwh'?'~s':'.0f',title:{text:mode==='gwh'?'GWh':`${start} = 100`,font:{size:10,color:C.muted},standoff:3}},
    annotations:[lastLabel(y1[y1.length-1],C.teal,mode==='gwh'?f0(y1.at(-1)):f0(y1.at(-1)),6),lastLabel(y2[y2.length-1],C.slate,f0(y2.at(-1)),6)]}),plotConfig);
  const labels=[String(start),String(end)];
- Plotly.react('plot2',[
+ if(readyPlots.has('plot2')) Plotly.react('plot2',[
   {type:'bar',orientation:'h',y:labels,x:[a.data_centre_share_pct,b.data_centre_share_pct],name:'Data centres',marker:{color:C.teal},
     hovertemplate:'%{y}: %{x:.1f}% · data centres<extra></extra>'},
   {type:'bar',orientation:'h',y:labels,x:[100-a.data_centre_share_pct,100-b.data_centre_share_pct],name:'Other customers',marker:{color:C.slatePale},
@@ -253,14 +275,14 @@ function update(){
  let ymin=Math.min(0,...pos.map(z=>z.base))-mag*.35, ymax=Math.max(0,...pos.map(z=>z.base+z.y))+mag*.20;
  const waterfall=pos.map((z,i)=>({type:'bar',x:[positions[i]],y:[z.y],base:[z.base],marker:{color:z.color,line:{width:0}},width:[.53],hovertemplate:`<b>${positions[i]}</b><br>${signed(z.val)} GWh<extra></extra>`}));
  const ann=pos.map((z,i)=>({x:positions[i],y:z.val>=0?z.base+z.y:z.base,text:`<b>${signed(z.val)}</b>`,showarrow:false,yanchor:z.val>=0?'bottom':'top',yshift:z.val>=0?7:-6,font:{size:12,color:C.text}}));
- Plotly.react('plot3',waterfall,frameLayout(242,{barmode:'overlay',bargap:.52,margin:{l:50,r:11,t:21,b:42},
+ if(readyPlots.has('plot3')) Plotly.react('plot3',waterfall,frameLayout(242,{barmode:'overlay',bargap:.52,margin:{l:50,r:11,t:21,b:42},
    xaxis:{categoryorder:'array',categoryarray:positions,showgrid:false,tickfont:{size:10.5,color:C.text},fixedrange:true},
    yaxis:{range:[ymin,ymax],gridcolor:C.line,zeroline:true,zerolinecolor:'#BCC9D1',tickformat:'~s',nticks:5,fixedrange:true},
    annotations:ann}),plotConfig);
  const xy=yoy.map(p=>String(p.year));
  const lows=Math.min(0,...yoy.map(p=>p.dc),...yoy.map(p=>p.other));
  const highs=Math.max(0,...yoy.map(p=>p.dc),...yoy.map(p=>p.other));
- Plotly.react('plot4',[
+ if(readyPlots.has('plot4')) Plotly.react('plot4',[
    {type:'bar',name:'Data centres',x:xy,y:yoy.map(p=>p.dc),marker:{color:C.teal},
     customdata:yoy.map(p=>p.dcRate),text:yoy.map(p=>(p.year===peak.year||p.year===latest.year)?signed(p.dc):''),textposition:'outside',textfont:{size:10,color:C.teal},cliponaxis:false,
     hovertemplate:'<b>%{x} · data centres</b><br>%{y:+,.0f} GWh<br>%{customdata:+.1f}% year-on-year<extra></extra>'},
