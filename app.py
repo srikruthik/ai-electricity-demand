@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -21,9 +22,20 @@ st.set_page_config(page_title="AI and electricity demand", page_icon="⚡", layo
 def load() -> dict[str, pd.DataFrame]:
     return {
         name: pd.read_csv(PROCESSED / f"{name}.csv")
-        for name in ["ireland_annual", "jurisdiction_share", "growth_share", "projections",
-                     "growth_2025", "ai_share"]
+        for name in [
+            "ireland_annual",
+            "jurisdiction_share",
+            "growth_share",
+            "projections",
+            "growth_2025",
+            "ai_share",
+        ]
     }
+
+
+@st.cache_data
+def load_ireland_html(ireland: pd.DataFrame) -> str:
+    return charts_ireland.ireland_panel(ireland)
 
 
 def show(chart: alt.Chart) -> None:
@@ -41,8 +53,10 @@ def growth_between(ireland: pd.DataFrame, first: int, last: int) -> pd.DataFrame
     end = ireland.loc[ireland["year"] == last].iloc[0]
     return pd.DataFrame({
         "series": ["Data centres", "All other metered customers"],
-        "change_gwh": [int(end["data_centres_gwh"] - start["data_centres_gwh"]),
-                       int(end["other_gwh"] - start["other_gwh"])],
+        "change_gwh": [
+            int(end["data_centres_gwh"] - start["data_centres_gwh"]),
+            int(end["other_gwh"] - start["other_gwh"]),
+        ],
     })
 
 
@@ -58,7 +72,9 @@ first_year, last_year = int(ireland["year"].min()), int(ireland["year"].max())
 start_row, end_row = ireland.iloc[0], ireland.iloc[-1]
 dc_full = int(end_row["data_centres_gwh"] - start_row["data_centres_gwh"])
 other_full = int(end_row["other_gwh"] - start_row["other_gwh"])
-growth_pct = float(growth_share.loc[growth_share["jurisdiction"] == "Ireland", "share_pct"].iloc[0])
+growth_pct = float(
+    growth_share.loc[growth_share["jurisdiction"] == "Ireland", "share_pct"].iloc[0]
+)
 share_start = float(start_row["data_centre_share_pct"])
 share_end = float(end_row["data_centre_share_pct"])
 world_use = use_share.loc[use_share["jurisdiction"] == "World"].iloc[0]
@@ -80,24 +96,39 @@ st.subheader(
     f"Data centres supplied {growth_pct:.0f}% of the growth in Ireland's metered electricity demand "
     f"from {first_year} to {last_year}."
 )
+
 m1, m2, m3, m4 = st.columns(4)
-m1.metric(f"Ireland data centre share, {last_year}", f"{share_end:.1f}%",
-          f"{share_end - share_start:+.1f} pts since {first_year}")
-m2.metric(f"Ireland share of demand growth, {first_year}-{last_year}", f"{growth_pct:.0f}%")
-m3.metric("Growth of AI-focused data centres, 2025", f"+{ai_rate:.0f}%",
-          help="IEA modelled estimate, global.")
-m4.metric(f"World data centre share, {world_use['period']}", f"{world_use['share_pct']:.1f}%",
-          help="IEA modelled estimate of share of global electricity consumption.")
+m1.metric(
+    f"Ireland data centre share, {last_year}",
+    f"{share_end:.1f}%",
+    f"{share_end - share_start:+.1f} pts since {first_year}",
+)
+m2.metric(
+    f"Ireland share of demand growth, {first_year}-{last_year}",
+    f"{growth_pct:.0f}%",
+)
+m3.metric(
+    "Growth of AI-focused data centres, 2025",
+    f"+{ai_rate:.0f}%",
+    help="IEA modelled estimate, global.",
+)
+m4.metric(
+    f"World data centre share, {world_use['period']}",
+    f"{world_use['share_pct']:.1f}%",
+    help="IEA modelled estimate of share of global electricity consumption.",
+)
 
 with st.expander(f"How the {growth_pct:.0f}% is calculated"):
     st.markdown(
         f"From `data/processed/ireland_annual.csv`, built from CSO Table 1 "
         f"(`data/source/cso_mec02_annual.csv`):\n\n"
         f"| | {first_year} | {last_year} | Change |\n|---|---:|---:|---:|\n"
-        f"| Data centres (GWh) | {int(start_row['data_centres_gwh']):,} | {int(end_row['data_centres_gwh']):,} | {dc_full:+,} |\n"
-        f"| All other metered customers (GWh) | {int(start_row['other_gwh']):,} | {int(end_row['other_gwh']):,} | {other_full:+,} |\n\n"
-        f"Data centres' share of the increase = {dc_full:,} / ({dc_full:,} + {other_full:,}) "
-        f"= **{growth_pct:.1f}%**."
+        f"| Data centres (GWh) | {int(start_row['data_centres_gwh']):,} | "
+        f"{int(end_row['data_centres_gwh']):,} | {dc_full:+,} |\n"
+        f"| All other metered customers (GWh) | {int(start_row['other_gwh']):,} | "
+        f"{int(end_row['other_gwh']):,} | {other_full:+,} |\n\n"
+        f"Data centres' share of the increase = {dc_full:,} / "
+        f"({dc_full:,} + {other_full:,}) = **{growth_pct:.1f}%**."
     )
 
 st.markdown("#### The answer")
@@ -112,6 +143,7 @@ st.success(
     f"{dc_rate:.0f}% for all data centres and {all_rate:.0f}% for all electricity demand. How much of total "
     f"data centre electricity AI uses is estimated, not measured."
 )
+
 st.caption(
     "Who this is for: a demand-forecasting analyst at a national electricity system operator, deciding "
     "whether data centre load needs its own growth category in the next long-term demand forecast."
@@ -125,7 +157,7 @@ tab1, tab2, tab3 = st.tabs(
 with tab1:
     if tab1.open:
         components.html(
-            charts_ireland.ireland_panel(ireland),
+            load_ireland_html(ireland),
             height=2400,
             scrolling=False,
         )
@@ -232,7 +264,7 @@ st.markdown(
     - **Lawrence Berkeley National Laboratory**, *2024 United States Data Center Energy Usage Report*.
       [lbl.gov](https://energyanalysis.lbl.gov/news/berkeley-lab-report-evaluates-increase-electricity-demand-data-centers)
     - **Lawrence Berkeley National Laboratory**, *United States Data Center Energy Usage Report: 2025 Update*
-      (June 2026). [lbl.gov](https://eta-publications.lbl.gov/publications/united-states-data-center-energy-2025)
+      (June 2026). [eta-publications.lbl.gov](https://eta-publications.lbl.gov/publications/united-states-data-center-energy-2025)
     - **Congressional Research Service**, *Data Centers and Their Energy Consumption: Frequently Asked
       Questions* (R48646), citing EPRI.
       [congress.gov](https://www.congress.gov/crs_external_products/R/PDF/R48646/R48646.3.pdf)
