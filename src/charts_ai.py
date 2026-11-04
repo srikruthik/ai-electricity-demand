@@ -16,6 +16,11 @@ def ai_growth(frame: pd.DataFrame) -> alt.Chart:
         y=alt.Y("subject:N", sort=order, title="What is measured", axis=alt.Axis(labelLimit=220)),
         x=alt.X("growth_pct:Q", title="Growth in electricity consumption, 2025 (%)",
                 scale=alt.Scale(domain=[0, 60])),
+        tooltip=[
+            alt.Tooltip("subject:N", title="Measure"),
+            alt.Tooltip("growth_pct:Q", title="Growth", format=".0f"),
+            alt.Tooltip("source:N", title="Source"),
+        ],
         color=alt.Color("subject:N", legend=None, scale=alt.Scale(
             domain=["AI-focused data centres", "All data centres", "All electricity demand"],
             range=[DATA_CENTRES, OTHER, NEUTRAL])),
