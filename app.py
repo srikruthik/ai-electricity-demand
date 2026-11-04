@@ -117,113 +117,124 @@ st.caption(
     "whether data centre load needs its own growth category in the next long-term demand forecast."
 )
 
-tab1, tab2, tab3 = st.tabs(["1. Ireland: what meters show", "2. Is Ireland an outlier?",
-                            "3. Is it AI specifically?"])
+tab1, tab2, tab3 = st.tabs(
+    ["1. Ireland: what meters show", "2. Is Ireland an outlier?", "3. Is it AI specifically?"],
+    on_change="rerun",
+)
 
 with tab1:
-    components.html(
-        charts_ireland.ireland_panel(ireland),
-        height=2400,
-        scrolling=False,
-    )
+    if tab1.open:
+        components.html(
+            charts_ireland.ireland_panel(ireland),
+            height=2400,
+            scrolling=False,
+        )
 
 with tab2:
-    lens = st.radio(
-        "Measure significance as",
-        ["Share of electricity use", "Share of growth in demand"],
-        horizontal=True,
-        key="lens",
-        help="The same data can answer the question differently depending on which you choose.",
-    )
-    frame = use_share if lens == "Share of electricity use" else growth_share
-    lens_key = "use" if lens == "Share of electricity use" else "growth"
-    selected = st.multiselect(
-        "Places to compare", frame["jurisdiction"].tolist(), default=frame["jurisdiction"].tolist(),
-        key=f"jurisdictions_{lens_key}",
-    )
-    chosen = frame.loc[frame["jurisdiction"].isin(selected)]
-    if chosen.empty:
-        st.info("No places selected. Choose at least one above to compare.")
-    else:
-        show(charts_global.comparison(chosen, lens_key, complete=len(chosen) == len(frame)))
-        if lens_key == "use":
-            st.caption(
-                "Data centre share of electricity consumption, in percent. Not like-for-like: Ireland is "
-                "metered consumption in 2025 as a share of metered electricity; the United States (2023) and "
-                "the world (2024) are modelled estimates as a share of all electricity consumption."
-            )
-        else:
-            st.caption(
-                "Data centres' share of the increase in electricity demand, in percent. Not like-for-like: "
-                "Ireland is measured growth over 2015-2025; the others are IEA projections for 2024-2030, "
-                "published as approximate values ('around', 'more than', 'nearly'), drawn here at the stated value."
-            )
+    if tab2.open:
+        lens = st.radio(
+            "Measure significance as",
+            ["Share of electricity use", "Share of growth in demand"],
+            horizontal=True,
+            key="lens",
+            help="The same data can answer the question differently depending on which you choose.",
+        )
+        frame = use_share if lens == "Share of electricity use" else growth_share
+        lens_key = "use" if lens == "Share of electricity use" else "growth"
+        selected = st.multiselect(
+            "Places to compare",
+            frame["jurisdiction"].tolist(),
+            default=frame["jurisdiction"].tolist(),
+            key=f"jurisdictions_{lens_key}",
+        )
+        chosen = frame.loc[frame["jurisdiction"].isin(selected)]
 
-    place = st.selectbox("Projections for", sorted(proj["jurisdiction"].unique(), reverse=True),
-                         key="projection_place")
-    show(charts_global.projections(proj.loc[proj["jurisdiction"] == place], place))
-    st.caption(
-        "Data centre electricity consumption in terawatt hours (TWh) per year. Circles are published "
-        "estimates for past years; triangles are projections, with shaded bars showing the published range "
-        "across scenarios. Each label names the report and year it comes from. Projections are scenarios, "
-        "not measurements."
-    )
+        if chosen.empty:
+            st.info("No places selected. Choose at least one above to compare.")
+        else:
+            show(charts_global.comparison(chosen, lens_key, complete=len(chosen) == len(frame)))
+            if lens_key == "use":
+                st.caption(
+                    "Data centre share of electricity consumption, in percent. Not like-for-like: Ireland is "
+                    "metered consumption in 2025 as a share of metered electricity; the United States (2023) and "
+                    "the world (2024) are modelled estimates as a share of all electricity consumption."
+                )
+            else:
+                st.caption(
+                    "Data centres' share of the increase in electricity demand, in percent. Not like-for-like: "
+                    "Ireland is measured growth over 2015-2025; the others are IEA projections for 2024-2030, "
+                    "published as approximate values ('around', 'more than', 'nearly'), drawn here at the stated value."
+                )
+
+        place = st.selectbox(
+            "Projections for",
+            sorted(proj["jurisdiction"].unique(), reverse=True),
+            key="projection_place",
+        )
+        show(charts_global.projections(proj.loc[proj["jurisdiction"] == place], place))
+        st.caption(
+            "Data centre electricity consumption in terawatt hours (TWh) per year. Circles are published "
+            "estimates for past years; triangles are projections, with shaded bars showing the published range "
+            "across scenarios. Each label names the report and year it comes from. Projections are scenarios, "
+            "not measurements."
+        )
 
 with tab3:
-    st.write(
-        "No public source measures AI's own electricity use. The closest evidence is the IEA's estimate of "
-        "consumption by data centres built mainly for AI."
-    )
-    show(charts_ai.ai_growth(data["growth_2025"]))
-    st.caption(
-        "Growth in electricity consumption in 2025 compared with 2024, in percent, worldwide. All three are "
-        "IEA modelled estimates from Key Questions on Energy and AI (2026) and its press release."
-    )
-    st.info(
-        f"**Growth is not size.** AI-focused data centres grew fastest in 2025, but AI is estimated to use "
-        f"only {ai['low_pct']:.0f}-{ai['high_pct']:.0f}% of US data centre electricity ({int(ai['year'])}, "
-        f"{ai['source']}). AI is becoming a larger driver of data centre demand; it is not yet most of it."
-    )
+    if tab3.open:
+        st.write(
+            "No public source measures AI's own electricity use. The closest evidence is the IEA's estimate of "
+            "consumption by data centres built mainly for AI."
+        )
+        show(charts_ai.ai_growth(data["growth_2025"]))
+        st.caption(
+            "Growth in electricity consumption in 2025 compared with 2024, in percent, worldwide. All three are "
+            "IEA modelled estimates from Key Questions on Energy and AI (2026) and its press release."
+        )
+        st.info(
+            f"**Growth is not size.** AI-focused data centres grew fastest in 2025, but AI is estimated to use "
+            f"only {ai['low_pct']:.0f}-{ai['high_pct']:.0f}% of US data centre electricity ({int(ai['year'])}, "
+            f"{ai['source']}). AI is becoming a larger driver of data centre demand; it is not yet most of it."
+        )
 
 st.divider()
 st.header("What these data cannot show")
 st.markdown(
     """
-- **AI's measured electricity use.** No source here meters AI. CSO, IEA and LBNL measure or model data
-  centres, which also run storage, streaming and cloud services. The AI-specific figures are modelled
-  estimates of data centres built mainly for AI, or of AI's share, not meter readings.
-- **Why Ireland's consumption rose.** The CSO data record how much electricity data centres used, not
-  what ran on them, so they cannot attribute Ireland's growth to AI rather than other cloud services.
-- **Whether Ireland is typical.** Ireland is unusually concentrated. Its share is not a forecast for any
-  other grid.
-- **Exact comparisons across places.** Ireland's figures are metered; the US and world figures are
-  modelled or projected, cover different years and use different totals as the denominator.
-- **The future.** IEA and LBNL projections are scenarios with wide ranges, and both publishers revised
-  their projections between editions. Each figure here is labelled with the report it comes from.
-- **Complete coverage in Ireland.** CSO identifies data centres meter by meter; one it misses would be
-  counted under other customers.
-"""
+    - **AI's measured electricity use.** No source here meters AI. CSO, IEA and LBNL measure or model data
+      centres, which also run storage, streaming and cloud services. The AI-specific figures are modelled
+      estimates of data centres built mainly for AI, or of AI's share, not meter readings.
+    - **Why Ireland's consumption rose.** The CSO data record how much electricity data centres used, not
+      what ran on them, so they cannot attribute Ireland's growth to AI rather than other cloud services.
+    - **Whether Ireland is typical.** Ireland is unusually concentrated. Its share is not a forecast for any
+      other grid.
+    - **Exact comparisons across places.** Ireland's figures are metered; the US and world figures are
+      modelled or projected, cover different years and use different totals as the denominator.
+    - **The future.** IEA and LBNL projections are scenarios with wide ranges, and both publishers revised
+      their projections between editions. Each figure here is labelled with the report it comes from.
+    - **Complete coverage in Ireland.** CSO identifies data centres meter by meter; one it misses would be
+      counted under other customers.
+    """
 )
 
 st.divider()
 st.header("Sources")
 st.markdown(
     f"""
-Data last refreshed: **{LAST_REFRESH}**
+    Data last refreshed: **{LAST_REFRESH}**
 
-- **Central Statistics Office (Ireland)**, *Data Centres Metered Electricity Consumption 2025*, released
-  7 July 2026, Tables 1 and 2. Metered, 2015-2025. CC BY 4.0.
-  [cso.ie](https://www.cso.ie/en/releasesandpublications/ep/p-dcmec/datacentresmeteredelectricityconsumption2025/keyfindings/)
-- **International Energy Agency**, *Energy and AI* (April 2025). CC BY 4.0.
-  [iea.org](https://www.iea.org/reports/energy-and-ai/executive-summary)
-- **International Energy Agency**, *Key Questions on Energy and AI* (16 April 2026) and press release.
-  CC BY 4.0. [iea.org](https://www.iea.org/reports/key-questions-on-energy-and-ai/executive-summary)
-- **Lawrence Berkeley National Laboratory**, *2024 United States Data Center Energy Usage Report*.
-  [lbl.gov](https://energyanalysis.lbl.gov/news/berkeley-lab-report-evaluates-increase-electricity-demand-data-centers)
-- **Lawrence Berkeley National Laboratory**, *United States Data Center Energy Usage Report: 2025 Update*
-  (June 2026). [lbl.gov](https://eta-publications.lbl.gov/publications/united-states-data-center-energy-2025)
-- **Congressional Research Service**, *Data Centers and Their Energy Consumption: Frequently Asked
-  Questions* (R48646), citing EPRI.
-  [congress.gov](https://www.congress.gov/crs_external_products/R/PDF/R48646/R48646.3.pdf)
-"""
+    - **Central Statistics Office (Ireland)**, *Data Centres Metered Electricity Consumption 2025*, released
+      7 July 2026, Tables 1 and 2. Metered, 2015-2025. CC BY 4.0.
+      [cso.ie](https://www.cso.ie/en/releasesandpublications/ep/p-dcmec/datacentresmeteredelectricityconsumption2025/keyfindings/)
+    - **International Energy Agency**, *Energy and AI* (April 2025). CC BY 4.0.
+      [iea.org](https://www.iea.org/reports/energy-and-ai/executive-summary)
+    - **International Energy Agency**, *Key Questions on Energy and AI* (16 April 2026) and press release.
+      CC BY 4.0. [iea.org](https://www.iea.org/reports/key-questions-on-energy-and-ai/executive-summary)
+    - **Lawrence Berkeley National Laboratory**, *2024 United States Data Center Energy Usage Report*.
+      [lbl.gov](https://energyanalysis.lbl.gov/news/berkeley-lab-report-evaluates-increase-electricity-demand-data-centers)
+    - **Lawrence Berkeley National Laboratory**, *United States Data Center Energy Usage Report: 2025 Update*
+      (June 2026). [lbl.gov](https://eta-publications.lbl.gov/publications/united-states-data-center-energy-2025)
+    - **Congressional Research Service**, *Data Centers and Their Energy Consumption: Frequently Asked
+      Questions* (R48646), citing EPRI.
+      [congress.gov](https://www.congress.gov/crs_external_products/R/PDF/R48646/R48646.3.pdf)
+    """
 )
